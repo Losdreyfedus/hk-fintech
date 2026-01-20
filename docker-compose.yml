@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  # 1. Identity Service Veritabanı
+  postgres-identity:
+    image: postgres:15-alpine
+    container_name: hk-identity-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=identity_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_identity_data:/var/lib/postgresql/data
+
+  # 2. Wallet Service Veritabanı (YENİ)
+  postgres-wallet:
+    image: postgres:15-alpine
+    container_name: hk-wallet-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=wallet_db
+    ports:
+      - "5433:5432" # DİKKAT: Dışarıya 5433 portundan açıyoruz ki çakışmasın!
+    volumes:
+      - postgres_wallet_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_identity_data:
+  postgres_wallet_data:

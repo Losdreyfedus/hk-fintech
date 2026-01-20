@@ -9,5 +9,7 @@
   <url>http://maven.apache.org</url>
   <modules>
     <module>hk-common-lib</module>
+    <module>identity-service</module>
+    <module>wallet-service</module>
   </modules>
 </project>
