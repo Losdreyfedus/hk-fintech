@@ -1,69 +1,70 @@
 package com.hk-fintech.hk.identityservice.service;
 
-import com.hk-fintech.hk.identityservice.client.WalletClient;
+import com.hk-fintech.hk.common.events.kafka.UserCreatedEvent;
 import com.hk-fintech.hk.identityservice.dto.request.AuthRequest;
-import com.hk-fintech.hk.identityservice.dto.request.CreateWalletRequest;
 import com.hk-fintech.hk.identityservice.dto.response.AuthResponse;
 import com.hk-fintech.hk.identityservice.dto.request.RegisterRequest;
 import com.hk-fintech.hk.identityservice.entity.Role;
 import com.hk-fintech.hk.identityservice.entity.User;
+import com.hk-fintech.hk.identityservice.kafka.producer.IdentityProducer; // Yeni sınıfımız
 import com.hk-fintech.hk.identityservice.repository.UserRepository;
 import com.hk-fintech.hk.identityservice.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
         private final UserRepository userRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtService jwtService;
         private final AuthenticationManager authenticationManager;
+        private final IdentityProducer identityProducer;
 
-
-        private final WalletClient walletClient;
-
-
+        @Transactional
         public AuthResponse register(RegisterRequest request) {
+                // 1. Kullanıcıyı Kaydet
                 var user = User.builder()
-                                .firstName(request.getFirstName())
-                                .lastName(request.getLastName())
-                                .email(request.getEmail())
-                                .phoneNumber(request.getPhoneNumber())
-                                .password(passwordEncoder.encode(request.getPassword()))
-                                .role(Role.USER)
-                                .build();
-
+                        .firstName(request.getFirstName())
+                        .lastName(request.getLastName())
+                        .email(request.getEmail())
+                        .phoneNumber(request.getPhoneNumber())
+                        .password(passwordEncoder.encode(request.getPassword()))
+                        .role(Role.USER)
+                        .build();
 
                 User savedUser = userRepository.save(user);
+                log.info("Kullanıcı DB'ye kaydedildi. ID: {}", savedUser.getId());
 
-                CreateWalletRequest walletRequest = new CreateWalletRequest(savedUser.getId());
-                walletClient.createWallet(walletRequest);
+                // 2. Event Nesnesini Hazırla
+                UserCreatedEvent event = new UserCreatedEvent(
+                        savedUser.getId(),
+                        savedUser.getEmail(),
+                        savedUser.getFirstName() + " " + savedUser.getLastName()
+                );
 
+                // 3. Producer Üzerinden Fırlat (Nasıl gittiği bizi ilgilendirmez)
+                identityProducer.sendUserCreatedEvent(event);
+
+                // 4. Token Dön
                 var jwtToken = jwtService.generateToken(user);
-
                 return AuthResponse.builder()
-                                .token(jwtToken)
-                                .build();
+                        .token(jwtToken)
+                        .build();
         }
 
         public AuthResponse login(AuthRequest request) {
                 authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                request.getEmail(),
-                                                request.getPassword()));
-
-                var user = userRepository.findByEmail(request.getEmail())
-                                .orElseThrow();
-
+                        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
                 var jwtToken = jwtService.generateToken(user);
-
-                return AuthResponse.builder()
-                                .token(jwtToken)
-                                .build();
+                return AuthResponse.builder().token(jwtToken).build();
         }
 }

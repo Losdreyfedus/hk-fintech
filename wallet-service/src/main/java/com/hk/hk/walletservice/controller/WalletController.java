@@ -16,20 +16,6 @@ public class WalletController {
 
     private final WalletService walletService;
 
-    @PostMapping
-    public ResponseEntity<WalletResponse> createWallet(@RequestBody CreateWalletRequest request) {
-        Wallet wallet = walletService.createWallet(request.getUserId());
-
-        WalletResponse response = WalletResponse.builder()
-                .id(wallet.getId())
-                .userId(wallet.getUserId())
-                .balance(wallet.getBalance())
-                .currency(wallet.getCurrency())
-                .build();
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
     @GetMapping("/user/{userId}")
     public ResponseEntity<WalletResponse> getWalletByUserId(@PathVariable Integer userId) {
         Wallet wallet = walletService.getByUserId(userId);

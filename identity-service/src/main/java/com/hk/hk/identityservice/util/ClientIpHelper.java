@@ -11,6 +11,6 @@ public class ClientIpHelper {
         if (xfHeader == null || xfHeader.isEmpty()) {
             return request.getRemoteAddr();
         }
-        return xfHeader.split(",")[0]; // Gerçek_Kullanıcı_IP
+        return xfHeader.split(",")[0];
     }
 }

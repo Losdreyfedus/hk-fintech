@@ -21,38 +21,31 @@ public class AuthController {
     private final RateLimitService rateLimitService;
     private final ClientIpHelper clientIpHelper;
 
-    // 1. REGISTER (Kayıt Ol) - IP Bazlı Kısıtlama
     @PostMapping("/register")
     public ResponseEntity<?> register(
             @RequestBody RegisterRequest request,
             HttpServletRequest servletRequest) {
 
-        // IP Adresini bul (Helper sayesinde)
         String clientIp = clientIpHelper.getClientIpAddress(servletRequest);
 
-        // Kova kontrolü: Hakkı var mı?
         if (!rateLimitService.tryConsume(RateLimitType.REGISTER, clientIp)) {
             return ResponseEntity
                     .status(HttpStatus.TOO_MANY_REQUESTS) // 429 Hatası
                     .body("Çok fazla kayıt denemesi! Lütfen 5 dakika bekleyiniz.");
         }
 
-        // Hakkı varsa servise git
         return ResponseEntity.ok(authService.register(request));
     }
 
-    // 2. LOGIN (Giriş Yap) - Email Bazlı Kısıtlama
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) { // LoginRequest veya AuthRequest
 
-        // Kova kontrolü: Bu email için hak var mı?
         if (!rateLimitService.tryConsume(RateLimitType.LOGIN, request.getEmail())) {
             return ResponseEntity
                     .status(HttpStatus.TOO_MANY_REQUESTS) // 429 Hatası
                     .body("Çok fazla giriş denemesi. Lütfen 5 dakika bekleyiniz.");
         }
 
-        // Hakkı varsa servise git
         return ResponseEntity.ok(authService.login(request));
     }
 }

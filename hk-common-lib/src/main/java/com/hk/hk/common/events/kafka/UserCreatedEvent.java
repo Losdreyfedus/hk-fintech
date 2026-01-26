@@ -1,14 +1,14 @@
-package com.hk-fintech.hk.identityservice.dto.request;
+package com.hk-fintech.hk.common.events.kafka;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateWalletRequest {
+public class UserCreatedEvent {
     private Integer userId;
+    private String email;
+    private String name;
 }

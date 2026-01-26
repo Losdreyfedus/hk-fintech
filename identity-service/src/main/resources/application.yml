@@ -18,6 +18,27 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  # --- KAFKA AYARLARI EKLENDİ ---
+  kafka:
+    bootstrap-servers: localhost:29092
+
+    # Mesaj Gönderen (Producer) Ayarları - Kullanıcı Oluşunca
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    # Mesaj Alan (Consumer) Ayarları - Rollback (Telafi) İçin
+    consumer:
+      group-id: identity-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*" # Tüm paketlerden gelen JSON nesnelerine güven
+
 application:
   security:
     jwt:
