@@ -30,7 +30,6 @@ public class AuthService {
 
         @Transactional
         public AuthResponse register(RegisterRequest request) {
-                // 1. Kullanıcıyı Kaydet
                 var user = User.builder()
                         .firstName(request.getFirstName())
                         .lastName(request.getLastName())
@@ -43,17 +42,13 @@ public class AuthService {
                 User savedUser = userRepository.save(user);
                 log.info("Kullanıcı DB'ye kaydedildi. ID: {}", savedUser.getId());
 
-                // 2. Event Nesnesini Hazırla
                 UserCreatedEvent event = new UserCreatedEvent(
                         savedUser.getId(),
                         savedUser.getEmail(),
                         savedUser.getFirstName() + " " + savedUser.getLastName()
                 );
+                identityProducer.scheduleUserCreatedEvent(event);
 
-                // 3. Producer Üzerinden Fırlat (Nasıl gittiği bizi ilgilendirmez)
-                identityProducer.sendUserCreatedEvent(event);
-
-                // 4. Token Dön
                 var jwtToken = jwtService.generateToken(user);
                 return AuthResponse.builder()
                         .token(jwtToken)

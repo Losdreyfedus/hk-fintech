@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class IdentityConsumer {
-
+        //soft delete (gerçek proje)
     private final UserRepository userRepository;
 
     @KafkaListener(topics = "wallet-failed-topic", groupId = "identity-group")

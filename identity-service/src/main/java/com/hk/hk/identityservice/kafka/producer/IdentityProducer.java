@@ -1,26 +1,43 @@
 package com.hk-fintech.hk.identityservice.kafka.producer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hk-fintech.hk.common.events.kafka.UserCreatedEvent;
+import com.hk-fintech.hk.identityservice.entity.OutboxMessage;
+import com.hk-fintech.hk.identityservice.entity.OutboxStatus;
+import com.hk-fintech.hk.identityservice.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class IdentityProducer {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
-    public void sendUserCreatedEvent(UserCreatedEvent event) {
+    public void scheduleUserCreatedEvent(UserCreatedEvent event) {
         try {
-            log.info("📤 Kafka'ya UserCreatedEvent gönderiliyor: {}", event.getEmail());
-            kafkaTemplate.send("user-created-topic", event);
-            log.info("✅ Event başarıyla gönderildi. User ID: {}", event.getUserId());
-        } catch (Exception e) {
-            log.error("💥 Kafka mesaj gönderme hatası! User ID: {}", event.getUserId(), e);
-            // İstersen burada özel bir Exception fırlatabilirsin
+            String jsonPayload = objectMapper.writeValueAsString(event);
+
+            OutboxMessage message = OutboxMessage.builder()
+                    .topic("user-created-topic")
+                    .payload(jsonPayload)
+                    .status(OutboxStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            outboxRepository.save(message);
+
+            log.info("📮 Event Outbox tablosuna yazıldı. Kafka bekleniyor... User ID: {}", event.getUserId());
+
+        } catch (JsonProcessingException e) {
+            log.error("JSON çevrim hatası! Event kaydedilemedi.", e);
+            throw new RuntimeException(e);
         }
     }
 }

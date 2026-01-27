@@ -30,7 +30,7 @@ public class AuthController {
 
         if (!rateLimitService.tryConsume(RateLimitType.REGISTER, clientIp)) {
             return ResponseEntity
-                    .status(HttpStatus.TOO_MANY_REQUESTS) // 429 Hatası
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Çok fazla kayıt denemesi! Lütfen 5 dakika bekleyiniz.");
         }
 
@@ -38,11 +38,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) { // LoginRequest veya AuthRequest
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
 
         if (!rateLimitService.tryConsume(RateLimitType.LOGIN, request.getEmail())) {
             return ResponseEntity
-                    .status(HttpStatus.TOO_MANY_REQUESTS) // 429 Hatası
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Çok fazla giriş denemesi. Lütfen 5 dakika bekleyiniz.");
         }
 
