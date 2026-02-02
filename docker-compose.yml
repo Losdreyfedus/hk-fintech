@@ -21,7 +21,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  # 1. Identity Service Database
+
   postgres-identity:
     image: postgres:15-alpine
     container_name: hk-identity-db
@@ -34,7 +34,6 @@ services:
     volumes:
       - postgres_identity_data:/var/lib/postgresql/data
 
-  # 2. Wallet Service Database
   postgres-wallet:
     image: postgres:15-alpine
     container_name: hk-wallet-db
@@ -47,7 +46,19 @@ services:
     volumes:
       - postgres_wallet_data:/var/lib/postgresql/data
 
+  postgres-card:
+    image: postgres:15-alpine
+    container_name: hk-card-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=card_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_card_data:/var/lib/postgresql/data
 
 volumes:
   postgres_identity_data:
   postgres_wallet_data:
+  postgres_card_data: # Volume eklemeyi unutma! 🆕

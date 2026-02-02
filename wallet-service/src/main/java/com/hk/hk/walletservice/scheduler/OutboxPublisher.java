@@ -1,8 +1,8 @@
-package com.hk-fintech.hk.identityservice.scheduler;
+package com.hk-fintech.hk.walletservice.scheduler;
 
-import com.hk-fintech.hk.identityservice.entity.OutboxMessage;
-import com.hk-fintech.hk.identityservice.entity.OutboxStatus;
-import com.hk-fintech.hk.identityservice.repository.OutboxRepository;
+import com.hk-fintech.hk.walletservice.entity.OutboxMessage;
+import com.hk-fintech.hk.walletservice.entity.OutboxStatus;
+import com.hk-fintech.hk.walletservice.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;

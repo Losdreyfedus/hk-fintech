@@ -1,0 +1,14 @@
+server:
+  port: 9092
+
+spring:
+  application:
+    name: card-service
+  datasource:
+    url: jdbc:postgresql://localhost:5434/card_db
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
