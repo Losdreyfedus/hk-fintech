@@ -1,0 +1,19 @@
+package com.hk-fintech.hk.identityservice.controller;
+
+import com.hk-fintech.hk.identityservice.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/users") // CardService buraya istek atıyor
+@RequiredArgsConstructor
+public class UserController {
+
+    private final AuthService authService;
+
+    @GetMapping("/{id}/exists")
+    public boolean existsById(@PathVariable Integer id) {
+        // Az önce AuthService'e eklediğimiz metodu çağırıyoruz
+        return authService.existsById(id);
+    }
+}

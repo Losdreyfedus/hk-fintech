@@ -62,4 +62,8 @@ public class AuthService {
                 var jwtToken = jwtService.generateToken(user);
                 return AuthResponse.builder().token(jwtToken).build();
         }
+
+        public boolean existsById(Integer id) {
+                return userRepository.existsById(id);
+        }
 }
