@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import java.util.List;
 
 @RestController
@@ -18,8 +18,8 @@ public class CardController {
     private final CardService cardService;
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CardResponse createCard(@RequestBody @Valid CreateCardRequest request){
-        return cardService.createCard(request);
+    public CardResponse createCard(@RequestBody @Valid CreateCardRequest request, @AuthenticationPrincipal Long userId){
+        return cardService.createCard(request, userId);
     }
     @GetMapping("/user/{userId}")
     @ResponseStatus(HttpStatus.OK)

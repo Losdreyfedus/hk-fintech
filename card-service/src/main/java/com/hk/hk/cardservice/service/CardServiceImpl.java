@@ -22,20 +22,18 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
-
-
     private final IdentityAdapter identityAdapter;
 
     @Override
-    public CardResponse createCard(CreateCardRequest request) {
-        log.info("Kart ekleme isteği alındı. User ID: {}", request.userId());
-        identityAdapter.checkUserExists(request.userId());
+    public CardResponse createCard(CreateCardRequest request, Long userId) {
+        log.info("Kart ekleme isteği alındı. User ID: {}", userId);
+        identityAdapter.checkUserExists(userId);
 
         CardRuleValidator.validateExpiry(request.expireMonth(), request.expireYear());
 
         String maskedPan = CardFormatter.maskCardNumber(request.cardNumber());
 
-        if (cardRepository.existsByUserIdAndMaskedCardNumber(request.userId(), maskedPan)) {
+        if (cardRepository.existsByUserIdAndMaskedCardNumber(userId, maskedPan)) {
             log.warn("Mükerrer kart: {}", maskedPan);
             throw new RuntimeException("Bu kart zaten cüzdanınızda ekli!");
         }
@@ -43,6 +41,7 @@ public class CardServiceImpl implements CardService {
         String fakeBankToken = UUID.randomUUID().toString();
 
         Card card = cardMapper.toEntity(request);
+        card.setUserId(userId);
         card.setMaskedCardNumber(maskedPan);
         card.setCardToken(fakeBankToken);
 

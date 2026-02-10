@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.LuhnCheck;
 
 public record CreateCardRequest(
-        @NotNull(message = "User ID boş olamaz")
-        Long userId,
-
         @NotBlank(message = "Kart sahibi adı boş olamaz")
         String cardHolder,
 

@@ -6,7 +6,7 @@ import com.hk-fintech.hk.identityservice.dto.response.AuthResponse;
 import com.hk-fintech.hk.identityservice.dto.request.RegisterRequest;
 import com.hk-fintech.hk.identityservice.entity.Role;
 import com.hk-fintech.hk.identityservice.entity.User;
-import com.hk-fintech.hk.identityservice.kafka.producer.IdentityProducer; // Yeni sınıfımız
+import com.hk-fintech.hk.identityservice.kafka.producer.IdentityProducer;
 import com.hk-fintech.hk.identityservice.repository.UserRepository;
 import com.hk-fintech.hk.identityservice.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +16,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -49,7 +52,8 @@ public class AuthService {
                 );
                 identityProducer.scheduleUserCreatedEvent(event);
 
-                var jwtToken = jwtService.generateToken(user);
+                String jwtToken = generateToken(savedUser);
+
                 return AuthResponse.builder()
                         .token(jwtToken)
                         .build();
@@ -58,12 +62,23 @@ public class AuthService {
         public AuthResponse login(AuthRequest request) {
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+
                 var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
-                var jwtToken = jwtService.generateToken(user);
+
+                String jwtToken = generateToken(user);
+
                 return AuthResponse.builder().token(jwtToken).build();
         }
 
         public boolean existsById(Integer id) {
                 return userRepository.existsById(id);
+        }
+
+        private String generateToken(User user) {
+                Map<String, Object> claims = new HashMap<>();
+                claims.put("userId", user.getId());
+                claims.put("role", user.getRole());
+
+                return jwtService.generateToken(claims, user);
         }
 }
