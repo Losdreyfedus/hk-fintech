@@ -58,7 +58,20 @@ services:
     volumes:
       - postgres_card_data:/var/lib/postgresql/data
 
+  postgres-payment:
+    image: postgres:15-alpine
+    container_name: hk-payment-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=payment_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_payment_data:/var/lib/postgresql/data
+
 volumes:
   postgres_identity_data:
   postgres_wallet_data:
-  postgres_card_data: # Volume eklemeyi unutma! 🆕
+  postgres_card_data:
+  postgres_payment_data:

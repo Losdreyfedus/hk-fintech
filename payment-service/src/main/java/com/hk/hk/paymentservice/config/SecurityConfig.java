@@ -1,6 +1,6 @@
-package com.hk-fintech.hk.cardservice.config;
+package com.hk-fintech.hk.paymentservice.config;
 
-import com.hk-fintech.hk.cardservice.security.JwtAuthenticationFilter;
+import com.hk-fintech.hk.paymentservice.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
