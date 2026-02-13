@@ -12,8 +12,7 @@ public class UserController {
     private final AuthService authService;
 
     @GetMapping("/{id}/exists")
-    public boolean existsById(@PathVariable Integer id) {
-        // Az önce AuthService'e eklediğimiz metodu çağırıyoruz
+    public boolean existsById(@PathVariable Long id) {
         return authService.existsById(id);
     }
 }

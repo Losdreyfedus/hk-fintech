@@ -70,7 +70,7 @@ public class AuthService {
                 return AuthResponse.builder().token(jwtToken).build();
         }
 
-        public boolean existsById(Integer id) {
+                public boolean existsById(Long id) {
                 return userRepository.existsById(id);
         }
 
@@ -78,7 +78,19 @@ public class AuthService {
                 Map<String, Object> claims = new HashMap<>();
                 claims.put("userId", user.getId());
                 claims.put("role", user.getRole());
-
                 return jwtService.generateToken(claims, user);
+        }
+
+        public Long validateToken(String token) {
+                if (!jwtService.validateToken(token)) {
+                        throw new RuntimeException("Geçersiz veya süresi dolmuş token!");
+                }
+
+                Long userId = jwtService.extractUserId(token);
+                if (!userRepository.existsById(userId)) {
+                        throw new RuntimeException("Kullanıcı bulunamadı!");
+                }
+
+                return userId;
         }
 }

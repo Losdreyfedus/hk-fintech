@@ -1,5 +1,6 @@
 package com.hk-fintech.hk.cardservice.security;
 
+import com.hk-fintech.hk.cardservice.client.IdentityServiceClient;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,13 +13,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    // Artık JwtService yok, Feign Client var!
+    private final IdentityServiceClient identityServiceClient;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -35,18 +37,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        if (jwtService.validateToken(jwt)) {
-            Long userId = jwtService.extractUserId(jwt);
+        try {
+            Long userId = identityServiceClient.validateToken(jwt);
 
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userId,
                         null,
-                        new ArrayList<>()
+                        Collections.emptyList()
                 );
+
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
+        } catch (Exception e) {
+            System.out.println("Card Service Token Doğrulama Hatası: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);

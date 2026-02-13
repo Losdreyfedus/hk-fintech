@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class WalletCreationFailedEvent {
-    private Integer userId;
+    private Long userId;
 }

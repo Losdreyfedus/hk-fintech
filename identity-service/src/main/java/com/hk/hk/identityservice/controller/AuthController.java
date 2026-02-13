@@ -48,4 +48,9 @@ public class AuthController {
 
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @GetMapping("/validate")
+    public ResponseEntity<Long> validateToken(@RequestParam("token") String token) {
+        return ResponseEntity.ok(authService.validateToken(token));
+    }
 }

@@ -1,6 +1,5 @@
 package com.hk-fintech.hk.cardservice.service;
 
-import com.hk-fintech.hk.cardservice.adapter.IdentityAdapter; // Yeni import
 import com.hk-fintech.hk.cardservice.dto.request.CreateCardRequest;
 import com.hk-fintech.hk.cardservice.dto.response.CardResponse;
 import com.hk-fintech.hk.cardservice.entity.Card;
@@ -22,15 +21,11 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
-    private final IdentityAdapter identityAdapter;
 
     @Override
     public CardResponse createCard(CreateCardRequest request, Long userId) {
         log.info("Kart ekleme isteği alındı. User ID: {}", userId);
-        identityAdapter.checkUserExists(userId);
-
         CardRuleValidator.validateExpiry(request.expireMonth(), request.expireYear());
-
         String maskedPan = CardFormatter.maskCardNumber(request.cardNumber());
 
         if (cardRepository.existsByUserIdAndMaskedCardNumber(userId, maskedPan)) {
