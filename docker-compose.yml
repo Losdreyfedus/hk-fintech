@@ -1,19 +1,24 @@
 version: '3.8'
+
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.1
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
+    container_name: hk-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - 22181:2181
+      - "22181:2181"
+    networks:
+      - hk-fintech-network
 
   kafka:
-    image: confluentinc/cp-kafka:7.6.1
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
+    container_name: hk-kafka
     depends_on:
       - zookeeper
     ports:
-      - 29092:29092
+      - "29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -21,57 +26,86 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - hk-fintech-network
 
   postgres-identity:
-    image: postgres:15-alpine
+    image: postgres:${POSTGRES_VERSION}
     container_name: hk-identity-db
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=identity_db
     ports:
-      - "5432:5432"
+      - "${IDENTITY_DB_PORT}:5432"
     volumes:
       - postgres_identity_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
 
   postgres-wallet:
-    image: postgres:15-alpine
+    image: postgres:${POSTGRES_VERSION}
     container_name: hk-wallet-db
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=wallet_db
     ports:
-      - "5433:5432"
+      - "${WALLET_DB_PORT}:5432"
     volumes:
       - postgres_wallet_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
 
   postgres-card:
-    image: postgres:15-alpine
+    image: postgres:${POSTGRES_VERSION}
     container_name: hk-card-db
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=card_db
     ports:
-      - "5434:5432"
+      - "${CARD_DB_PORT}:5432"
     volumes:
       - postgres_card_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
 
   postgres-payment:
-    image: postgres:15-alpine
+    image: postgres:${POSTGRES_VERSION}
     container_name: hk-payment-db
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=payment_db
     ports:
-      - "5435:5432"
+      - "${PAYMENT_DB_PORT}:5432"
     volumes:
       - postgres_payment_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
+
+  postgres-invoice:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: hk-invoice-db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=invoice_db
+    ports:
+      - "${INVOICE_DB_PORT}:5432"
+    volumes:
+      - postgres_invoice_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
 
 volumes:
   postgres_identity_data:
   postgres_wallet_data:
   postgres_card_data:
   postgres_payment_data:
+  postgres_invoice_data:
+
+networks:
+  hk-fintech-network:
+    driver: bridge

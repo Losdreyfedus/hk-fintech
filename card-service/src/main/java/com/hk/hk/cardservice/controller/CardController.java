@@ -38,7 +38,7 @@ public class CardController {
         return cardService.createCard(request, userId);
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<CardResponse> getAllCards(@AuthenticationPrincipal Long userId) {
         Bucket bucket = rateLimitService.resolveBucket(RateLimitType.CARD_LIST, userId);

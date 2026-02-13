@@ -26,7 +26,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public PaymentResponse processPayment(CreatePaymentRequest request, Long userId) {
 
-        List<CardResponse> userCards = cardServiceClient.getAllCardsByUserId(userId);
+        List<CardResponse> userCards = cardServiceClient.getAllCardsByUserId();
 
 
         CardResponse selectedCard = userCards.stream()
