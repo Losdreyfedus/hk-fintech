@@ -20,7 +20,7 @@ public class WalletProducer {
     private final OutboxRepository outboxRepository; // KafkaTemplate yerine DB
     private final ObjectMapper objectMapper;
     @Transactional
-    public void sendWalletCreationFailedEvent(Integer userId) {
+    public void sendWalletCreationFailedEvent(Long userId) {
         try {
             WalletCreationFailedEvent event = new WalletCreationFailedEvent(userId);
             String payload = objectMapper.writeValueAsString(event);

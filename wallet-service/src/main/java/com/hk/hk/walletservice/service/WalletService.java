@@ -16,7 +16,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
 
 
-    public void createWallet(Integer userId) {
+    public void createWallet(Long userId) {
         if (walletRepository.findByUserId(userId).isPresent()) {
             log.warn("Bu kullanıcının zaten cüzdanı var. İşlem atlanıyor. User ID: {}", userId);
             return;
@@ -31,7 +31,7 @@ public class WalletService {
         log.info("✅ Cüzdan DB'ye kaydedildi. User ID: {}", userId);
     }
 
-    public Wallet getByUserId(Integer userId) {
+    public Wallet getByUserId(Long userId) {
         return walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cüzdan bulunamadı!"));
     }

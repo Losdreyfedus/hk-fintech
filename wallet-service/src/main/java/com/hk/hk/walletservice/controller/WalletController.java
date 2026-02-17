@@ -17,7 +17,7 @@ public class WalletController {
     private final WalletService walletService;
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<WalletResponse> getWalletByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<WalletResponse> getWalletByUserId(@PathVariable Long userId) {
         Wallet wallet = walletService.getByUserId(userId);
 
         WalletResponse response = WalletResponse.builder()

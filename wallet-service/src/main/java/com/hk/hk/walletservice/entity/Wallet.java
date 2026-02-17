@@ -21,7 +21,7 @@ public class Wallet {
     private String id;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private Integer userId;
+    private Long userId;
     @Column(nullable = false)
     private BigDecimal balance;
 
