@@ -15,7 +15,6 @@ public interface InvoiceMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     Invoice toEntity(CreateInvoiceRequest request);
-
     @Mapping(target = "createdDate", source = "createdAt")
     InvoiceResponse toResponse(Invoice invoice);
 }

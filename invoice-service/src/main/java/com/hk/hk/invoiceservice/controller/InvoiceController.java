@@ -1,6 +1,7 @@
 package com.hk-fintech.hk.invoiceservice.controller;
 
 import com.hk-fintech.hk.invoiceservice.dto.request.CreateInvoiceRequest;
+import com.hk-fintech.hk.invoiceservice.dto.request.PayInvoiceRequest;
 import com.hk-fintech.hk.invoiceservice.dto.response.InvoiceResponse;
 import com.hk-fintech.hk.invoiceservice.service.InvoiceService;
 import com.hk-fintech.hk.invoiceservice.service.InvoiceServiceImpl;
@@ -19,7 +20,6 @@ public class InvoiceController {
 
     private final InvoiceServiceImpl invoiceService;
 
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public InvoiceResponse createInvoice(@RequestBody @Valid CreateInvoiceRequest request, @AuthenticationPrincipal Long currentUserId) {
@@ -33,5 +33,13 @@ public class InvoiceController {
     @ResponseStatus(HttpStatus.OK)
     public List<InvoiceResponse> getMyInvoices(@AuthenticationPrincipal Long userId) {
         return invoiceService.getAllInvoices(userId);
+    }
+
+    @PostMapping("/{id}/pay")
+    @ResponseStatus(HttpStatus.OK)
+    public void payInvoice(@PathVariable Long id,
+                           @RequestBody @Valid PayInvoiceRequest request,
+                           @AuthenticationPrincipal Long currentUserId) {
+        invoiceService.payInvoice(id, request, currentUserId);
     }
 }
