@@ -1,14 +1,12 @@
-package com.hk-fintech.hk.paymentservice.config;
+package com.hk-fintech.hk.common.logging;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-@Component
-public class FeignClientInterceptor implements RequestInterceptor {
+public class AuthForwardingInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
@@ -16,11 +14,9 @@ public class FeignClientInterceptor implements RequestInterceptor {
 
         if (attributes != null) {
             HttpServletRequest request = attributes.getRequest();
-
-            String authorizationHeader = request.getHeader("Authorization");
-
-            if (authorizationHeader != null) {
-                template.header("Authorization", authorizationHeader);
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null) {
+                template.header("Authorization", authHeader);
             }
         }
     }

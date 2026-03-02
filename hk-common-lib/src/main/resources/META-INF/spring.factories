@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.hk-fintech.hk.common.logging.LoggingAutoConfiguration

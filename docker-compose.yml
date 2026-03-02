@@ -99,12 +99,61 @@ services:
     networks:
       - hk-fintech-network
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
+    container_name: hk-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - cluster.name=hk-fintech-cluster
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - hk-fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELK_VERSION}
+    container_name: hk-logstash
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./elk/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5044:5044"
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    networks:
+      - hk-fintech-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELK_VERSION}
+    container_name: hk-kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - hk-fintech-network
+
 volumes:
   postgres_identity_data:
   postgres_wallet_data:
   postgres_card_data:
   postgres_payment_data:
   postgres_invoice_data:
+  elasticsearch_data:
 
 networks:
   hk-fintech-network:
