@@ -5,13 +5,19 @@ import com.hk-fintech.hk.invoiceservice.dto.request.CreateInvoiceRequest;
 import com.hk-fintech.hk.invoiceservice.dto.request.PayInvoiceRequest;
 import com.hk-fintech.hk.invoiceservice.dto.request.PaymentRequest;
 import com.hk-fintech.hk.invoiceservice.dto.response.InvoiceResponse;
+import com.hk-fintech.hk.invoiceservice.dto.response.PaymentResponse;
 import com.hk-fintech.hk.invoiceservice.entity.Invoice;
 import com.hk-fintech.hk.invoiceservice.entity.InvoiceStatus;
 import com.hk-fintech.hk.invoiceservice.event.InvoicePaidEvent;
+import com.hk-fintech.hk.invoiceservice.exception.InvoiceAlreadyPaidException;
+import com.hk-fintech.hk.invoiceservice.exception.InvoiceNotFoundException;
+import com.hk-fintech.hk.invoiceservice.exception.PaymentNotSuccessfulException;
+import com.hk-fintech.hk.invoiceservice.exception.UnauthorizedInvoiceAccessException;
 import com.hk-fintech.hk.invoiceservice.kafka.InvoiceProducer;
 import com.hk-fintech.hk.invoiceservice.mapper.InvoiceMapper;
 import com.hk-fintech.hk.invoiceservice.repository.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +26,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InvoiceServiceImpl implements InvoiceService {
+
+    private static final String PAYMENT_STATUS_SUCCESS = "SUCCESS";
 
     private final InvoiceRepository invoiceRepository;
     private final InvoiceMapper invoiceMapper;
-
     private final PaymentClient paymentClient;
     private final InvoiceProducer invoiceProducer;
 
@@ -35,6 +43,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setStatus(InvoiceStatus.PENDING);
 
         Invoice savedInvoice = invoiceRepository.save(invoice);
+        log.info("Fatura oluşturuldu. ID: {}, User ID: {}", savedInvoice.getId(), savedInvoice.getUserId());
 
         return invoiceMapper.toResponse(savedInvoice);
     }
@@ -46,35 +55,51 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .map(invoiceMapper::toResponse)
                 .toList();
     }
+
     @Override
     @Transactional
     public void payInvoice(Long invoiceId, PayInvoiceRequest request, Long currentUserId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
-                .orElseThrow(() -> new RuntimeException("Fatura bulunamadı! ID: " + invoiceId));
+                .orElseThrow(() -> new InvoiceNotFoundException(invoiceId));
 
-        if (!invoice.getUserId().equals(currentUserId)) {
-            throw new RuntimeException("Hata: Bu fatura size ait değil, ödeyemezsiniz!");
-        }
+        validateInvoiceOwnership(invoice, currentUserId);
+        validateInvoiceNotAlreadyPaid(invoice);
 
-        if (InvoiceStatus.PAID.equals(invoice.getStatus())) {
-            throw new RuntimeException("Bu fatura zaten ödenmiş!");
-        }
-
-        paymentClient.processPayment(new PaymentRequest(
+        PaymentResponse paymentResponse = paymentClient.processPayment(new PaymentRequest(
                 invoice.getId(),
                 request.cardId(),
-                invoice.getAmount()
-        ));
+                invoice.getAmount(),
+                request.paymentMethod()));
+
+        if (!PAYMENT_STATUS_SUCCESS.equals(paymentResponse.status())) {
+            log.error("Ödeme başarısız! Fatura ID: {}, Ödeme Status: {}", invoiceId, paymentResponse.status());
+            throw new PaymentNotSuccessfulException(invoiceId);
+        }
 
         invoice.setStatus(InvoiceStatus.PAID);
         invoiceRepository.save(invoice);
+        log.info("Fatura ödendi. ID: {}, User ID: {}", invoiceId, currentUserId);
 
         invoiceProducer.sendInvoicePaidEvent(new InvoicePaidEvent(
                 invoice.getId(),
                 invoice.getUserId(),
                 invoice.getAmount(),
                 invoice.getInstitutionName(),
-                LocalDateTime.now()
-        ));
+                LocalDateTime.now()));
+    }
+
+    private void validateInvoiceOwnership(Invoice invoice, Long currentUserId) {
+        if (!invoice.getUserId().equals(currentUserId)) {
+            log.warn("Yetkisiz fatura erişimi! Fatura ID: {}, Fatura Sahibi: {}, İsteyen: {}",
+                    invoice.getId(), invoice.getUserId(), currentUserId);
+            throw new UnauthorizedInvoiceAccessException();
+        }
+    }
+
+    private void validateInvoiceNotAlreadyPaid(Invoice invoice) {
+        if (InvoiceStatus.PAID.equals(invoice.getStatus())) {
+            log.warn("Zaten ödenmiş fatura tekrar ödeme denemesi! Fatura ID: {}", invoice.getId());
+            throw new InvoiceAlreadyPaidException(invoice.getId());
+        }
     }
 }

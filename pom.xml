@@ -11,5 +11,7 @@
     <module>hk-common-lib</module>
     <module>identity-service</module>
     <module>wallet-service</module>
+    <module>invoice-service</module>
+    <module>payment-service</module>
   </modules>
 </project>

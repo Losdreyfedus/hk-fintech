@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: payment-service
+  kafka:
+    bootstrap-servers: localhost:29092
   datasource:
     url: jdbc:postgresql://localhost:5435/payment_db
     username: postgres

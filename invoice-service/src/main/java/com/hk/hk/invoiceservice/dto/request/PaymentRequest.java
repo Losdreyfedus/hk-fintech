@@ -5,5 +5,6 @@ import java.math.BigDecimal;
 public record PaymentRequest(
         Long invoiceId,
         Long cardId,
-        BigDecimal amount
+        BigDecimal amount,
+        PaymentMethod paymentMethod
 ) {}

@@ -4,7 +4,6 @@ import com.hk-fintech.hk.invoiceservice.dto.request.CreateInvoiceRequest;
 import com.hk-fintech.hk.invoiceservice.dto.request.PayInvoiceRequest;
 import com.hk-fintech.hk.invoiceservice.dto.response.InvoiceResponse;
 import com.hk-fintech.hk.invoiceservice.service.InvoiceService;
-import com.hk-fintech.hk.invoiceservice.service.InvoiceServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,13 +17,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InvoiceController {
 
-    private final InvoiceServiceImpl invoiceService;
+    private final InvoiceService invoiceService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public InvoiceResponse createInvoice(@RequestBody @Valid CreateInvoiceRequest request, @AuthenticationPrincipal Long currentUserId) {
+    public InvoiceResponse createInvoice(@RequestBody @Valid CreateInvoiceRequest request,
+            @AuthenticationPrincipal Long currentUserId) {
         if (!request.userId().equals(currentUserId)) {
-            throw new RuntimeException("Hata: Başkası adına fatura oluşturamazsınız! (Token ID: " + currentUserId + ")");
+            throw new RuntimeException(
+                    "Hata: Başkası adına fatura oluşturamazsınız! (Token ID: " + currentUserId + ")");
         }
         return invoiceService.createInvoice(request);
     }
@@ -38,8 +39,8 @@ public class InvoiceController {
     @PostMapping("/{id}/pay")
     @ResponseStatus(HttpStatus.OK)
     public void payInvoice(@PathVariable Long id,
-                           @RequestBody @Valid PayInvoiceRequest request,
-                           @AuthenticationPrincipal Long currentUserId) {
+            @RequestBody @Valid PayInvoiceRequest request,
+            @AuthenticationPrincipal Long currentUserId) {
         invoiceService.payInvoice(id, request, currentUserId);
     }
 }

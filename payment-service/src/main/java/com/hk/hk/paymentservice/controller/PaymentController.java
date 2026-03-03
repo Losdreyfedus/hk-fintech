@@ -24,4 +24,13 @@ public class PaymentController {
     ) {
         return paymentService.processPayment(request, userId);
     }
+
+    @PostMapping("/top-up")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PaymentResponse processTopUpPayment(
+            @RequestBody com.hk-fintech.hk.paymentservice.dto.request.TopUpPaymentRequest request,
+            @AuthenticationPrincipal Long userId
+    ) {
+        return paymentService.processTopUpPayment(request, userId);
+    }
 }
