@@ -1,0 +1,41 @@
+# =====================================================
+# CONFIGMAP — Paylaşılan Konfigürasyonlar
+# =====================================================
+# ConfigMap, hassas olmayan konfigürasyon verilerini
+# (URL'ler, port'lar, topic isimleri) merkezi olarak
+# yönetir. Servisler bu değerleri environment variable
+# veya volume mount olarak alır.
+#
+# Avantajı: Konfigürasyon değiştiğinde sadece ConfigMap
+# güncellenir, imaj yeniden build edilmez.
+# =====================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hk-fintech-config
+  namespace: hk-fintech
+  labels:
+    app.kubernetes.io/part-of: hk-fintech-hk-fintech
+data:
+  # ---- Servis URL'leri (K8S dahili DNS) ----
+  # K8S'te servisler "<service-name>.<namespace>.svc.cluster.local"
+  # formatında birbirine erişir. Aynı namespace'te kısa isim yeterlidir.
+  IDENTITY_SERVICE_URL: "http://identity-service:9090"
+  WALLET_SERVICE_URL: "http://wallet-service:9091"
+  CARD_SERVICE_URL: "http://card-service:9092"
+  PAYMENT_SERVICE_URL: "http://payment-service:9093"
+  INVOICE_SERVICE_URL: "http://invoice-service:9094"
+
+  # ---- Kafka ----
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+
+  # ---- Veritabanı Hostları ----
+  IDENTITY_DB_HOST: "postgres-identity"
+  WALLET_DB_HOST: "postgres-wallet"
+  CARD_DB_HOST: "postgres-card"
+  PAYMENT_DB_HOST: "postgres-payment"
+  INVOICE_DB_HOST: "postgres-invoice"
+  DB_PORT: "5432"
+
+  # ---- JWT ----
+  JWT_EXPIRATION: "86400000"

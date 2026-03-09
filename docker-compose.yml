@@ -147,6 +147,118 @@ services:
     networks:
       - hk-fintech-network
 
+  # =====================================================
+  # MİKROSERVİSLER
+  # =====================================================
+  # Build context: root dizin (hk-common-lib erişimi için)
+  # Her servis kendi DB'sine ve Kafka'ya bağımlıdır
+  # Ortam değişkenleri ile container içi bağlantılar sağlanır
+  # =====================================================
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: identity-service/Dockerfile
+    container_name: hk-identity-service
+    depends_on:
+      - postgres-identity
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identity:5432/identity_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - APPLICATION_SECURITY_JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - APPLICATION_SECURITY_JWT_EXPIRATION=${JWT_EXPIRATION}
+    ports:
+      - "9090:9090"
+    networks:
+      - hk-fintech-network
+    restart: on-failure
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: wallet-service/Dockerfile
+    container_name: hk-wallet-service
+    depends_on:
+      - postgres-wallet
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-wallet:5432/wallet_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - PAYMENT_SERVICE_URL=http://payment-service:9093
+    ports:
+      - "9091:9091"
+    networks:
+      - hk-fintech-network
+    restart: on-failure
+
+  card-service:
+    build:
+      context: .
+      dockerfile: card-service/Dockerfile
+    container_name: hk-card-service
+    depends_on:
+      - postgres-card
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-card:5432/card_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+    ports:
+      - "9092:9092"
+    networks:
+      - hk-fintech-network
+    restart: on-failure
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: hk-payment-service
+    depends_on:
+      - postgres-payment
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-payment:5432/payment_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - CARD_SERVICE_URL=http://card-service:9092
+      - WALLET_SERVICE_URL=http://wallet-service:9091
+    ports:
+      - "9093:9093"
+    networks:
+      - hk-fintech-network
+    restart: on-failure
+
+  invoice-service:
+    build:
+      context: .
+      dockerfile: invoice-service/Dockerfile
+    container_name: hk-invoice-service
+    depends_on:
+      - postgres-invoice
+      - kafka
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-invoice:5432/invoice_db
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - INVOICE_DB_PORT=5432
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - PAYMENT_SERVICE_URL=http://payment-service:9093
+    ports:
+      - "9094:9094"
+    networks:
+      - hk-fintech-network
+    restart: on-failure
+
 volumes:
   postgres_identity_data:
   postgres_wallet_data:

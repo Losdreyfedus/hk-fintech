@@ -1,0 +1,112 @@
+# =====================================================
+# PAYMENT-SERVICE — Deployment + Service
+# =====================================================
+# Payment servisi en çok bağımlılığa sahip servis:
+#   - identity-service (token doğrulama)
+#   - card-service (kart bilgisi)
+#   - wallet-service (bakiye çekme)
+#   - Kafka (event yayınlama)
+# =====================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: hk-fintech
+  labels:
+    app: payment-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9093
+      targetPort: 9093
+  selector:
+    app: payment-service
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: hk-fintech
+  labels:
+    app: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z postgres-payment 5432; do echo waiting for payment db; sleep 2; done;']
+      containers:
+        - name: payment-service
+          image: hk-fintech-hk-fintech-payment-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9093
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            # ---- Veritabanı ----
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9093
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9093
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payment-service-hpa
+  namespace: hk-fintech
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payment-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

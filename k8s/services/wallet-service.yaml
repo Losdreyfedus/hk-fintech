@@ -1,0 +1,106 @@
+# =====================================================
+# WALLET-SERVICE — Deployment + Service
+# =====================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-service
+  namespace: hk-fintech
+  labels:
+    app: wallet-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9091
+      targetPort: 9091
+  selector:
+    app: wallet-service
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-service
+  namespace: hk-fintech
+  labels:
+    app: wallet-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wallet-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: wallet-service
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z postgres-wallet 5432; do echo waiting for wallet db; sleep 2; done;']
+      containers:
+        - name: wallet-service
+          image: hk-fintech-hk-fintech-wallet-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9091
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            # ---- Veritabanı ----
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9091
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9091
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wallet-service-hpa
+  namespace: hk-fintech
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wallet-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

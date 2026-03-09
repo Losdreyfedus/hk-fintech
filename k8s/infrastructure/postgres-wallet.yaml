@@ -1,0 +1,71 @@
+# =====================================================
+# POSTGRESQL — Wallet DB (StatefulSet + Service + PVC)
+# =====================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-wallet
+  namespace: hk-fintech
+  labels:
+    app: postgres-wallet
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres-wallet
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-wallet
+  namespace: hk-fintech
+spec:
+  serviceName: postgres-wallet
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-wallet
+  template:
+    metadata:
+      labels:
+        app: postgres-wallet
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: "wallet_db"
+          volumeMounts:
+            - name: postgres-wallet-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-wallet-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

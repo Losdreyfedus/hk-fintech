@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-card:5432/card_db
+    
+identity-service-url: http://identity-service:9090

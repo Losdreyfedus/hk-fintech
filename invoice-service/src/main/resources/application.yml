@@ -1,7 +1,10 @@
 server:
   port: ${INVOICE_PORT:9094}
+  shutdown: graceful
 
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   application:
     name: invoice-service
 
@@ -13,12 +16,15 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
 
   kafka:
     bootstrap-servers: localhost:29092
@@ -37,3 +43,14 @@ spring:
 
 application:
   security:
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always

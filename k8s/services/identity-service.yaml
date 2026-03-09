@@ -1,0 +1,128 @@
+# =====================================================
+# IDENTITY-SERVICE — Deployment + Service
+# =====================================================
+# Deployment, stateless pod'ları yönetir:
+#   - replicas: Kaç kopya çalışacağını belirler
+#   - RollingUpdate: Sıfır kesinti ile güncelleme sağlar
+#   - Liveness/Readiness Probe: Pod'un sağlığını izler
+#
+# Service (ClusterIP), cluster içi yük dengeleme sağlar:
+#   - Diğer servisler "identity-service:9090" ile erişir
+#   - Birden çok pod varsa istekler eşit dağıtılır
+# =====================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: hk-fintech
+  labels:
+    app: identity-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9090
+      targetPort: 9090
+  selector:
+    app: identity-service
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service
+  namespace: hk-fintech
+  labels:
+    app: identity-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: identity-service
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z postgres-identity 5432; do echo waiting for identity db; sleep 2; done;']
+      containers:
+        - name: identity-service
+          image: hk-fintech-hk-fintech-identity-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "k8s"
+            # ---- Veritabanı ----
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_PASSWORD
+            # ---- JWT ----
+            - name: APPLICATION_SECURITY_JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: JWT_SECRET_KEY
+            - name: APPLICATION_SECURITY_JWT_EXPIRATION
+              valueFrom:
+                configMapKeyRef:
+                  name: hk-fintech-config
+                  key: JWT_EXPIRATION
+          resources:
+            requests:
+              cpu: 200m
+              memory: 384Mi
+            limits:
+              cpu: 1000m
+              memory: 768Mi
+          # Uygulama henüz hazır değilse trafik yönlendirilmez
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9090
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          # Uygulama tamamen çöktüyse pod yeniden başlatılır
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9090
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: identity-service-hpa
+  namespace: hk-fintech
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: identity-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-identity:5432/identity_db
+
+  kafka:
+    bootstrap-servers: kafka:9092

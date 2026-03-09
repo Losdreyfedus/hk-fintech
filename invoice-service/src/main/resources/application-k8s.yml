@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-invoice:5432/invoice_db
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+identity-service-url: http://identity-service:9090
+payment-service-url: http://payment-service:9093

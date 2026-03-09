@@ -1,0 +1,81 @@
+# =====================================================
+# POSTGRESQL — Identity DB (StatefulSet + Service + PVC)
+# =====================================================
+# StatefulSet kullanıyoruz çünkü:
+#   - Veritabanları stateful (veri kalıcılığı gerektirir)
+#   - Pod yeniden başlasa bile aynı PVC'ye bağlanır
+#   - Öngörülebilir pod ismi (postgres-identity-0)
+#
+# PersistentVolumeClaim ile veri, pod silinse bile korunur.
+# =====================================================
+
+# --- Service (Dahili DNS erişimi) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-identity
+  namespace: hk-fintech
+  labels:
+    app: postgres-identity
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres-identity
+
+---
+# --- StatefulSet ---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-identity
+  namespace: hk-fintech
+spec:
+  serviceName: postgres-identity
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-identity
+  template:
+    metadata:
+      labels:
+        app: postgres-identity
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hk-fintech-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: "identity_db"
+          volumeMounts:
+            - name: postgres-identity-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-identity-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

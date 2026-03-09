@@ -1,0 +1,15 @@
+# =====================================================
+# NAMESPACE — Proje İzolasyonu
+# =====================================================
+# Namespace, K8S'te mantıksal bir yalıtım alanıdır.
+# Tüm proje kaynakları (Pod, Service, ConfigMap, Secret)
+# bu namespace altında yaşar. Farklı ortamlar (dev, staging,
+# prod) için farklı namespace'ler oluşturulabilir.
+# =====================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hk-fintech
+  labels:
+    app.kubernetes.io/part-of: hk-fintech-hk-fintech
+    environment: development

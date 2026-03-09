@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-payment:5432/payment_db
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+identity-service-url: http://identity-service:9090
+card-service-url: http://card-service:9092
+wallet-service-url: http://wallet-service:9091
