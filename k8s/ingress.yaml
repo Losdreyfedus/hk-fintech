@@ -1,14 +1,3 @@
-# =====================================================
-# INGRESS — Dış Trafik Yönlendirme
-# =====================================================
-# Ingress, cluster dışından gelen HTTP/HTTPS trafiği
-# URL path'ine göre ilgili servise yönlendirir.
-#
-# Örnek: /api/v1/payments → payment-service:9093
-#
-# Ön koşul: Nginx Ingress Controller kurulu olmalı
-#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
-# =====================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -24,7 +13,6 @@ spec:
   rules:
     - http:
         paths:
-          # ---- Identity Service ----
           - path: /api/v1/auth(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -33,7 +21,6 @@ spec:
                 port:
                   number: 9090
 
-          # ---- Wallet Service ----
           - path: /api/v1/wallets(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -42,7 +29,6 @@ spec:
                 port:
                   number: 9091
 
-          # ---- Card Service ----
           - path: /api/v1/cards(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -51,7 +37,6 @@ spec:
                 port:
                   number: 9092
 
-          # ---- Payment Service ----
           - path: /api/v1/payments(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -60,7 +45,6 @@ spec:
                 port:
                   number: 9093
 
-          # ---- Invoice Service ----
           - path: /api/v1/invoices(/|$)(.*)
             pathType: ImplementationSpecific
             backend:

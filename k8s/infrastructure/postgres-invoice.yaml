@@ -1,6 +1,3 @@
-# =====================================================
-# POSTGRESQL — Invoice DB (StatefulSet + Service + PVC)
-# =====================================================
 apiVersion: v1
 kind: Service
 metadata:

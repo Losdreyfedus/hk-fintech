@@ -1,12 +1,4 @@
-# =====================================================
-# PAYMENT-SERVICE — Deployment + Service
-# =====================================================
-# Payment servisi en çok bağımlılığa sahip servis:
-#   - identity-service (token doğrulama)
-#   - card-service (kart bilgisi)
-#   - wallet-service (bakiye çekme)
-#   - Kafka (event yayınlama)
-# =====================================================
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -90,23 +82,3 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             failureThreshold: 3
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: payment-service-hpa
-  namespace: hk-fintech
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: payment-service
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70

@@ -1,15 +1,4 @@
-# =====================================================
-# IDENTITY-SERVICE — Deployment + Service
-# =====================================================
-# Deployment, stateless pod'ları yönetir:
-#   - replicas: Kaç kopya çalışacağını belirler
-#   - RollingUpdate: Sıfır kesinti ile güncelleme sağlar
-#   - Liveness/Readiness Probe: Pod'un sağlığını izler
-#
-# Service (ClusterIP), cluster içi yük dengeleme sağlar:
-#   - Diğer servisler "identity-service:9090" ile erişir
-#   - Birden çok pod varsa istekler eşit dağıtılır
-# =====================================================
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -106,23 +95,3 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             failureThreshold: 3
----
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: identity-service-hpa
-  namespace: hk-fintech
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: identity-service
-  minReplicas: 1
-  maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70

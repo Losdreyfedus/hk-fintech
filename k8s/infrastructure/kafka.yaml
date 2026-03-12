@@ -1,13 +1,3 @@
-# =====================================================
-# KAFKA — Message Broker
-# =====================================================
-# Kafka, mikroservisler arası asenkron iletişimi sağlar.
-# Servisler event'leri (ör: topup-completed, invoice-paid)
-# topic'lere publish eder, ilgili servisler consume eder.
-#
-# KAFKA_ADVERTISED_LISTENERS: Cluster içinden
-# "kafka:9092" adresi ile erişim sağlanır.
-# =====================================================
 apiVersion: v1
 kind: Service
 metadata:
