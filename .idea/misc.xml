@@ -10,6 +10,7 @@
         <option value="$PROJECT_DIR$/wallet-service/pom.xml" />
         <option value="$PROJECT_DIR$/payment-service/pom.xml" />
         <option value="$PROJECT_DIR$/card-service/pom.xml" />
+        <option value="$PROJECT_DIR$/system-test/pom.xml" />
       </list>
     </option>
   </component>

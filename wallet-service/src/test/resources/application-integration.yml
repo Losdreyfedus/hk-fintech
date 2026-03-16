@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    # Testcontainers will provide these values dynamically
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  kafka:
+    bootstrap-servers: ${spring.kafka.bootstrap-servers}
+
+# Disable real feign client URLs in tests
+feign:
+  client:
+    config:
+      default:
+        url: http://localhost:0
+
+server:
+  port: 0

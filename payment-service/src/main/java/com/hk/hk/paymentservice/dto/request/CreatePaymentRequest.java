@@ -8,7 +8,6 @@ public record CreatePaymentRequest(
         @NotNull(message = "Fatura ID boş olamaz")
         Long invoiceId,
 
-        @NotNull(message = "Kart ID boş olamaz")
         Long cardId,
 
         @NotNull(message = "Tutar boş olamaz")

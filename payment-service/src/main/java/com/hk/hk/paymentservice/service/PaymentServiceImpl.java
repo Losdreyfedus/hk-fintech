@@ -35,7 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final WalletServiceClient walletServiceClient;
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = PaymentFailedException.class)
     public PaymentResponse processPayment(CreatePaymentRequest request, Long userId) {
 
         if (PaymentMethod.WALLET.equals(request.paymentMethod())) {
@@ -46,7 +46,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = PaymentFailedException.class)
     public PaymentResponse processTopUpPayment(TopUpPaymentRequest request, Long userId) {
 
         CardResponse selectedCard = findUserCard(request.cardId());

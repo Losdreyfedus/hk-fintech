@@ -29,6 +29,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getHttpStatus()).body(response);
     }
 
+    @ExceptionHandler(feign.FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeignException(feign.FeignException ex, HttpServletRequest request) {
+        String responseBody = ex.contentUTF8();
+        log.error("Downstream servis hatası (Feign): {} | Status: {} | Path: {} | Body: {}",
+                ex.getMessage(), ex.status(), request.getRequestURI(), responseBody);
+
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(ex.status() > 0 ? ex.status() : 500)
+                .error("FeignClientError")
+                .message("Downstream servis hatası: " + responseBody)
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(response.getStatus()).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         log.error("Beklenmeyen hata: {} | Path: {}", ex.getMessage(), request.getRequestURI(), ex);
@@ -37,7 +54,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(500)
                 .error("InternalServerError")
-                .message("Beklenmeyen bir hata oluştu.")
+                .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
 

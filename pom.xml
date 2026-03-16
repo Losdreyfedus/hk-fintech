@@ -13,5 +13,6 @@
     <module>wallet-service</module>
     <module>invoice-service</module>
     <module>payment-service</module>
+    <module>card-service</module>
   </modules>
 </project>

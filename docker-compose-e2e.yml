@@ -1,0 +1,231 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - hk-fintech-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hk-fintech-network
+
+  postgres-identity:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=identity_db
+    volumes:
+      - postgres_identity_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d identity_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-wallet:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=wallet_db
+    volumes:
+      - postgres_wallet_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d wallet_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-card:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=card_db
+    volumes:
+      - postgres_card_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d card_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-payment:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=payment_db
+    volumes:
+      - postgres_payment_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d payment_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-invoice:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=invoice_db
+    volumes:
+      - postgres_invoice_data:/var/lib/postgresql/data
+    networks:
+      - hk-fintech-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d invoice_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  identity-service:
+    image: identity-service:latest
+    depends_on:
+      postgres-identity:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-identity:5432/identity_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - APPLICATION_SECURITY_JWT_SECRET_KEY=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - APPLICATION_SECURITY_JWT_EXPIRATION=86400000
+    ports:
+      - "9090:9090"
+    networks:
+      - hk-fintech-network
+
+  wallet-service:
+    image: wallet-service:latest
+    depends_on:
+      postgres-wallet:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-wallet:5432/wallet_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - identity.service.url=http://identity-service:9090
+      - PAYMENT_SERVICE_URL=http://payment-service:9093
+    ports:
+      - "9091:9091"
+    networks:
+      - hk-fintech-network
+
+  card-service:
+    image: card-service:latest
+    depends_on:
+      postgres-card:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-card:5432/card_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - identity.service.url=http://identity-service:9090
+    ports:
+      - "9092:9092"
+    networks:
+      - hk-fintech-network
+
+  payment-service:
+    image: payment-service:latest
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-payment:5432/payment_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - identity.service.url=http://identity-service:9090
+      - CARD_SERVICE_URL=http://card-service:9092
+      - card.service.url=http://card-service:9092
+      - WALLET_SERVICE_URL=http://wallet-service:9091
+      - wallet.service.url=http://wallet-service:9091
+    ports:
+      - "9093:9093"
+    networks:
+      - hk-fintech-network
+
+  invoice-service:
+    image: invoice-service:latest
+    depends_on:
+      postgres-invoice:
+        condition: service_healthy
+      identity-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-invoice:5432/invoice_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - INVOICE_DB_PORT=5432
+      - IDENTITY_SERVICE_URL=http://identity-service:9090
+      - identity.service.url=http://identity-service:9090
+      - PAYMENT_SERVICE_URL=http://payment-service:9093
+      - payment.service.url=http://payment-service:9093
+    ports:
+      - "9094:9094"
+    networks:
+      - hk-fintech-network
+
+volumes:
+  postgres_identity_data:
+  postgres_wallet_data:
+  postgres_card_data:
+  postgres_payment_data:
+  postgres_invoice_data:
+
+networks:
+  hk-fintech-network:
+    driver: bridge

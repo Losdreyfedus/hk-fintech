@@ -1,42 +1,25 @@
-# ==========================================
-# .dockerignore - Docker Build Optimizasyonu
-# ==========================================
-# Bu dosya, Docker build sırasında context'e
-# dahil edilmemesi gereken dosya ve dizinleri
-# tanımlar. Build süresini kısaltır ve
-# imaj boyutunu küçültür.
-# ==========================================
 
-# IDE ve Editör dosyaları
 .idea/
 .vscode/
 *.iml
 
-# Git
 .git/
 .gitignore
 
-# Maven build çıktıları
 **/target/
 
-# Log dosyaları
 **/*.log
 
-# OS dosyaları
 .DS_Store
 Thumbs.db
 
-# Docker
 **/Dockerfile
 docker-compose.yml
 .dockerignore
 
-# Ortam değişkenleri (güvenlik)
 .env
 
-# Dökümantasyon
 *.md
 LICENSE
 
-# ELK konfigürasyonları (servis build'lerinde gereksiz)
 elk/
