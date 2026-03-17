@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.hk-fintech.hk</groupId>
+    <groupId>com.hk</groupId>
     <artifactId>identity-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>identity-service</name>
@@ -100,7 +100,7 @@
             <version>8.7.0</version>
         </dependency>
         <dependency>
-            <groupId>com.hk-fintech.hk</groupId>
+            <groupId>com.hk</groupId>
             <artifactId>hk-common-lib</artifactId>
         </dependency>
         <dependency>
@@ -131,7 +131,7 @@
                 <artifactId>spring-kafka</artifactId>
             </dependency>
             <dependency>
-                <groupId>com.hk-fintech.hk</groupId> <artifactId>hk-common-lib</artifactId>
+                <groupId>com.hk</groupId> <artifactId>hk-common-lib</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
         </dependencies>

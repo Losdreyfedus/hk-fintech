@@ -1,0 +1,60 @@
+package com.hk.identityservice.controller;
+
+import com.hk.identityservice.dto.request.AuthRequest; // Login Request
+import com.hk.identityservice.dto.request.RegisterRequest;
+import com.hk.identityservice.service.AuthService;
+import com.hk.identityservice.service.RateLimitService;
+import com.hk.identityservice.service.RateLimitType;
+import com.hk.identityservice.util.ClientIpHelper;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+    private final RateLimitService rateLimitService;
+    private final ClientIpHelper clientIpHelper;
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(
+            @RequestBody RegisterRequest request,
+            HttpServletRequest servletRequest) {
+
+        String clientIp = clientIpHelper.getClientIpAddress(servletRequest);
+
+        if (!rateLimitService.tryConsume(RateLimitType.REGISTER, clientIp)) {
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Çok fazla kayıt denemesi! Lütfen 5 dakika bekleyiniz.");
+        }
+
+        return ResponseEntity.ok(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+
+        if (!rateLimitService.tryConsume(RateLimitType.LOGIN, request.getEmail())) {
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Çok fazla giriş denemesi. Lütfen 5 dakika bekleyiniz.");
+        }
+
+        return ResponseEntity.ok(authService.login(request));
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(@RequestParam("token") String token) {
+        try {
+            return ResponseEntity.ok(authService.validateToken(token));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+}

@@ -4,7 +4,7 @@ metadata:
   name: hk-fintech-config
   namespace: hk-fintech
   labels:
-    app.kubernetes.io/part-of: hk-fintech-hk-fintech
+    app.kubernetes.io/part-of: hk-fintech
 data:
   IDENTITY_SERVICE_URL: "http://identity-service:9090"
   WALLET_SERVICE_URL: "http://wallet-service:9091"

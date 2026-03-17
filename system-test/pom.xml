@@ -8,7 +8,7 @@
         <version>3.1.5</version>
         <relativePath/>
     </parent>
-    <groupId>com.hk-fintech.hk</groupId>
+    <groupId>com.hk</groupId>
     <artifactId>system-test</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>system-test</name>
