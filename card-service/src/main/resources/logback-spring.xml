@@ -9,7 +9,7 @@
     </appender>
 
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>localhost:5044</destination>
+        <destination>${LOGSTASH_HOST:-logstash}:5044</destination>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <customFields>{"spring_application_name":"${APP_NAME}"}</customFields>
         </encoder>
