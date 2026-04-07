@@ -248,7 +248,7 @@ Each microservice manages its own PostgreSQL database:
 
 #### 1️⃣ Clone Repository
 ```bash
-cd c:\-proje\hk-fintech
+cd hk-fintech
 ```
 
 #### 2️⃣ Build Project
@@ -1022,7 +1022,7 @@ docker-compose logs | grep "ERROR\|WARN" | wc -l
 
 ## 📄 License
 
-Proprietary - HK Innovation Project
+Proprietary - HK Fintech Platform
 
 **Last Updated**: April 2026  
 **Maintained By**: HK Fintech Team  
