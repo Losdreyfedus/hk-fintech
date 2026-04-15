@@ -1017,7 +1017,8 @@ docker-compose logs | grep "ERROR\|WARN" | wc -l
 - **Architecture Questions**: Refer to `/docs/ARCHITECTURE.md`
 - **Deployment Guide**: `/docs/DEPLOYMENT.md`
 - **Testing Guide**: `/docs/TESTING.md`
-
+- **Email**: hamzakar13y@gmail.com
+- **LinkedIn**: linkedin.com/in/hamza-kar-
 ---
 
 ## 📄 License
@@ -1025,6 +1026,6 @@ docker-compose logs | grep "ERROR\|WARN" | wc -l
 Proprietary - HK Fintech Platform
 
 **Last Updated**: April 2026  
-**Maintained By**: HK Fintech Team  
+**Maintained By**: Hamza KAR 
 **Version**: 1.0.0
 
